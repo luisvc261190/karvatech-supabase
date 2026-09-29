@@ -3,7 +3,7 @@ import { ArrowRight, KeyRound, Loader2, Lock, User } from 'lucide-react'
 import { login } from './api'
 
 export default function Login({ onSuccess }) {
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -14,7 +14,7 @@ export default function Login({ onSuccess }) {
     setBusy(true)
     setError('')
     try {
-      const user = await login(username, password)
+      const user = await login(email.trim(), password)
       onSuccess(user)
     } catch (err) {
       setError(err.message || 'No pudimos iniciar sesión. Intenta de nuevo.')
@@ -60,14 +60,15 @@ export default function Login({ onSuccess }) {
 
           <form onSubmit={submit} noValidate>
             <label className="kt-field">
-              <span>Usuario</span>
+              <span>Correo</span>
               <div className="kt-input-wrap">
                 <User size={16} />
                 <input
-                  autoComplete="username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="admin"
+                  type="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="admin@karvatech.com"
                   required
                 />
               </div>

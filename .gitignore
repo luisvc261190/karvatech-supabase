@@ -3,8 +3,24 @@ dist/
 venv/
 __pycache__/
 *.pyc
+
+# Credenciales. Nunca deben entrar al repo: backend/.env llegó a estar
+# versionado con la contraseña de Neon y la de SMTP, y aparece en los tres
+# commits del historial. Si añades un archivo de entorno, ignórame-lo.
+.env
+.env.*
+!.env.example
+
+# Ya no existen (el backend FastAPI se eliminó al migrar a Supabase), pero los
+# dejamos por si alguien recupera algo del historial.
 backend/credentials.txt
 backend/.jwt-secret
 backend/karvatech.db
 backend/static/uploads/
 backend/logs/
+
+# supabase CLI
+.branches/
+.temp/
+supabase/.branches/
+supabase/.temp/

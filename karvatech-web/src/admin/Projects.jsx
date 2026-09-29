@@ -10,7 +10,7 @@ import {
   Upload,
   X,
 } from 'lucide-react'
-import { http, uploadImage } from './api'
+import { createProject, deleteProject, projects, updateProject, uploadImage } from './api'
 
 const STATUS_LABEL = {
   borrador: 'Borrador',
@@ -131,9 +131,9 @@ function ProjectForm({ initial, onCancel, onSaved }) {
     try {
       const payload = toPayload(f)
       if (editing) {
-        await http.patch(`/api/admin/projects/${initial.id}`, payload)
+        await updateProject(initial.id, payload)
       } else {
-        await http.post('/api/admin/projects', payload)
+        await createProject(payload)
       }
       onSaved()
     } catch (err) {
@@ -250,7 +250,7 @@ function ProjectForm({ initial, onCancel, onSaved }) {
               </div>
               <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden onChange={onFile} />
             </div>
-            <input value={f.imageUrl} onChange={set('imageUrl')} placeholder="/static/uploads/archivo.png o /images/art-work.jpg" />
+            <input value={f.imageUrl} onChange={set('imageUrl')} placeholder="URL de la imagen o ruta local, ej. /images/art-work.jpg" />
             {uploadError && <p className="kt-error">{uploadError}</p>}
           </div>
 
@@ -324,8 +324,7 @@ export default function ProjectsView() {
   const load = () => {
     setLoading(true)
     setError(false)
-    http
-      .get('/api/admin/projects')
+    projects()
       .then((data) => setItems(data.items || []))
       .catch(() => setError(true))
       .finally(() => setLoading(false))
@@ -338,7 +337,7 @@ export default function ProjectsView() {
     if (!window.confirm(`¿Eliminar “${p.title}” de forma permanente?`)) return
     setBusy(true)
     try {
-      await http.del(`/api/admin/projects/${p.id}`)
+      await deleteProject(p.id)
       load()
     } finally {
       setBusy(false)

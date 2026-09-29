@@ -1,7 +1,7 @@
 export default function WhatsAppButton() {
   return (
     <a
-      href="https://wa.me/51999999999?text=Hola%20KARVATECH%2C%20quiero%20cotizar%20un%20proyecto"
+      href="https://wa.me/51985928062?text=Hola%20KARVATECH%2C%20quiero%20cotizar%20un%20proyecto"
       target="_blank"
       rel="noopener noreferrer"
       className="whatsapp-float"

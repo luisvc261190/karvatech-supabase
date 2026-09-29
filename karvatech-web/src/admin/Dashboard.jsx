@@ -6,7 +6,7 @@ import {
   RefreshCw,
   Sparkles,
 } from 'lucide-react'
-import { http } from './api'
+import { summary } from './api'
 
 const STATUS_CFG = {
   nuevo: { label: 'Nuevo', cls: 'nu' },
@@ -42,8 +42,7 @@ export default function DashboardView({ onNavigate }) {
   const load = () => {
     setLoading(true)
     setError(false)
-    http
-      .get('/api/admin/summary')
+    summary()
       .then((d) => setData(d))
       .catch(() => setError(true))
       .finally(() => setLoading(false))

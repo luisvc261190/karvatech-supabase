@@ -12,7 +12,7 @@ import {
   Trash2,
   User,
 } from 'lucide-react'
-import { http } from './api'
+import { deleteMessage, messages, patchMessage, sendReply } from './api'
 
 const STATUS_CFG = {
   nuevo: { label: 'Nuevo', cls: 'nu' },
@@ -285,9 +285,6 @@ export default function MessagesView() {
 
   const fetchPage = (reset, statusFilter, offset, silent = false) => {
     const status = statusFilter && statusFilter !== 'todos' ? statusFilter : ''
-    const params = new URLSearchParams({ limit: String(PAGE) })
-    if (!reset) params.set('offset', String(offset))
-    if (status) params.set('status', status)
 
     if (reset) {
       if (!silent) setLoading(true)
@@ -297,8 +294,7 @@ export default function MessagesView() {
       setMoreError('')
     }
 
-    return http
-      .get(`/api/admin/messages?${params.toString()}`)
+    return messages({ limit: PAGE, offset: reset ? 0 : offset, status })
       .then((data) => {
         const chunk = data.items || []
         setItems(reset ? chunk : (prev) => [...prev, ...chunk])
@@ -330,18 +326,18 @@ export default function MessagesView() {
   const savePatch = async (id, patch) => {
     setBusy(true)
     try {
-      await http.patch(`/api/admin/messages/${id}`, patch)
+      await patchMessage(id, patch)
       reload(true)
     } finally {
       setBusy(false)
     }
   }
 
-  const sendReply = async (id, replyBody) => {
+  const sendMessageReply = async (id, replyBody) => {
     const item = items.find((i) => i.id === id)
     setBusy(true)
     try {
-      await http.post(`/api/admin/messages/${id}/reply`, { replyBody })
+      await sendReply(id, replyBody)
       setSent({
         email: item?.email || fullName(item) || 'Cliente',
         name: item ? fullName(item) : 'Cliente',
@@ -357,7 +353,7 @@ export default function MessagesView() {
     if (!window.confirm('¿Eliminar este mensaje de forma permanente?')) return
     setBusy(true)
     try {
-      await http.del(`/api/admin/messages/${id}`)
+      await deleteMessage(id)
       reload(true)
     } finally {
       setBusy(false)
@@ -451,7 +447,7 @@ export default function MessagesView() {
                 busy={busy}
                 onRemove={removeMessage}
                 onSave={(patch) => savePatch(selected.id, patch)}
-                onSend={(replyBody) => sendReply(selected.id, replyBody)}
+                onSend={(replyBody) => sendMessageReply(selected.id, replyBody)}
               />
             ) : (
               <div className="kt-reader-empty">

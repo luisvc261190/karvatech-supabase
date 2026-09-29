@@ -1,0 +1,17 @@
+# Configuración del proyecto Supabase de KARVATECH.
+#
+# Lo importante de este archivo es verify_jwt en submit-contact: sin ponerlo en
+# false, el gateway de Supabase rechaza con 401 cualquier llamada sin token, y
+# el formulario público no tiene token. Es exactamente lo que queremos para
+# send-reply (que sí exige sesión) y lo contrario para submit-contact.
+
+project_id = "ekbomwtifqdkbnzltbvk"
+
+[functions.submit-contact]
+# El formulario "Hablemos" es público: no hay sesión que enviar.
+verify_jwt = false
+
+[functions.send-reply]
+# Solo administradores. El gateway valida el token y la función vuelve a
+# comprobarlo, además de verificar is_admin en la base.
+verify_jwt = true

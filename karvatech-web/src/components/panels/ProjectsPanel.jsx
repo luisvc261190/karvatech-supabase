@@ -1,11 +1,32 @@
 import { useEffect, useState } from 'react'
 import { ArrowUpRight, Loader2 } from 'lucide-react'
 import { useJourney, TALK_INDEX } from '../../journey'
+import { getSupabase } from '../../lib/supabase'
 
 const STATUS_LABEL = {
   publicado: 'En línea',
   en_curso: 'En curso',
   entregado: 'Entregado',
+}
+
+// El panel público no necesita todos los campos; los que usa se dejan como
+// estaban para que el JSX de abajo no cambie.
+function toPublicProject(p) {
+  return {
+    id: p.id,
+    title: p.title || '',
+    subtitle: p.subtitle || '',
+    category: p.category || '',
+    client: p.client || '',
+    year: p.year || '',
+    summary: p.summary || '',
+    quote: p.quote || '',
+    imageUrl: p.image_url || '',
+    accent: p.accent || '#16a34a',
+    tags: p.tags || [],
+    status: p.status || 'borrador',
+    featured: !!p.featured,
+  }
 }
 
 export default function ProjectsPanel() {
@@ -17,16 +38,21 @@ export default function ProjectsPanel() {
 
   useEffect(() => {
     let alive = true
-    fetch('/api/projects')
-      .then((r) => {
-        if (!r.ok) throw new Error('No se pudo cargar los proyectos')
-        return r.json()
-      })
-      .then((data) => {
-        if (alive) {
-          setItems(data.items || [])
-          setLoading(false)
-        }
+    // Lectura directa a Supabase con la publishable key. La política RLS
+    // "projects: lectura pública del portafolio" deja pasar solo lo que no es
+    // borrador, que es exactamente lo que servía el endpoint /api/projects.
+    getSupabase()
+      .from('projects')
+      .select('*')
+      .neq('status', 'borrador')
+      .order('featured', { ascending: false })
+      .order('sort_order', { ascending: true })
+      .order('id', { ascending: false })
+      .then(({ data, error }) => {
+        if (!alive) return
+        if (error) throw error
+        setItems((data || []).map(toPublicProject))
+        setLoading(false)
       })
       .catch(() => {
         if (alive) {

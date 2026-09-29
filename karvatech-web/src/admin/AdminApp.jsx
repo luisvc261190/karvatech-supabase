@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import {
+  AlertTriangle,
   ExternalLink,
   FolderKanban,
   KeyRound,
@@ -9,7 +10,8 @@ import {
   MessageSquareText,
   ShieldCheck,
 } from 'lucide-react'
-import { http, logout } from './api'
+import { supabase } from '../lib/supabase'
+import { configError, logout, me } from './api'
 import ChangePassword from './ChangePassword'
 import DashboardView from './Dashboard'
 import Login from './Login'
@@ -28,12 +30,12 @@ export default function AdminApp() {
   const [loaded, setLoaded] = useState(false)
   const [view, setView] = useState('resumen')
   const [passOpen, setPassOpen] = useState(false)
+  const config = configError()
 
   useEffect(() => {
     let alive = true
-    http
-      .get('/api/admin/me')
-      .then((data) => alive && setUser(data.user))
+    me()
+      .then((profile) => alive && setUser(profile))
       .catch(() => alive && setUser(false))
       .finally(() => alive && setLoaded(true))
     return () => {
@@ -41,9 +43,30 @@ export default function AdminApp() {
     }
   }, [])
 
+  // Solo reaccionó a cierres de sesión (otra pestaña, expiración, token
+  // revocado). No volvemos a pedir el perfil en cada cambio: dentro de
+  // onAuthStateChange no se pueden lanzar consultas a Supabase porque se
+  // bloquean esperando al propio refresco del token.
+  useEffect(() => {
+    if (!supabase) return undefined
+    const { data } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT' || event === 'USER_DELETED') setUser(false)
+    })
+    return () => data.subscription.unsubscribe()
+  }, [])
+
   const leave = async () => {
     await logout()
     setUser(false)
+  }
+
+  if (config) {
+    return (
+      <div className="kt-loading">
+        <AlertTriangle size={22} />
+        <span>{config}</span>
+      </div>
+    )
   }
 
   if (!loaded) {
@@ -110,7 +133,7 @@ export default function AdminApp() {
           </button>
           <p className="kt-side-note">
             <ShieldCheck size={12} />
-            Sesión protegida · CSRF activo
+            Sesión protegida · Supabase Auth + RLS
           </p>
         </div>
       </aside>

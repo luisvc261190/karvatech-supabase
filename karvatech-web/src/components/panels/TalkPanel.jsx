@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import TechCanvas from '../TechCanvas'
 import ScheduleModal from '../ScheduleModal'
+import { getSupabase } from '../../lib/supabase'
 
 const sectors = [
   'Retail y e-commerce',
@@ -43,6 +44,7 @@ const initialForm = {
   employees: '',
   country: '',
   pain: '',
+  website: '',
 }
 
 export default function TalkPanel() {
@@ -71,17 +73,23 @@ export default function TalkPanel() {
       phone: `${form.prefix} ${form.phone}`.trim(),
     }
     try {
-      const res = await fetch('/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+      // Va a la Edge Function y no a la tabla directamente: messages no tiene
+      // ninguna política de INSERT para el rol anónimo, así que la función es el
+      // único camino de entrada. Ahí viven el honeypot y el rate limit.
+      const { data, error } = await getSupabase().functions.invoke('submit-contact', {
+        body: payload,
       })
-      if (!res.ok) throw new Error('Error')
+      if (error) {
+        const detail =
+          data?.error || error.message || 'No se pudo enviar tu solicitud.'
+        throw new Error(detail)
+      }
       setDone(true)
-    } catch {
+    } catch (err) {
       setStatus({
         type: 'error',
-        text: 'No se pudo enviar tu solicitud. Revisa tu conexión y vuelve a intentarlo.',
+        text: err?.message ||
+          'No se pudo enviar tu solicitud. Revisa tu conexión y vuelve a intentarlo.',
       })
     }
   }
@@ -135,7 +143,7 @@ export default function TalkPanel() {
             <a href="mailto:contacto@karvatech.com">
               <Mail size={17} /> contacto@karvatech.com
             </a>
-            <a href="https://wa.me/51999999999" target="_blank" rel="noopener noreferrer">
+            <a href="https://wa.me/51985928062" target="_blank" rel="noopener noreferrer">
               WhatsApp · +51 999 999 999 <ArrowUpRight size={14} />
             </a>
             <span>Lima, Perú · Lun a Sáb · 9:00 – 19:00</span>
@@ -154,7 +162,7 @@ export default function TalkPanel() {
             </p>
             <a
               className="ix-button ix-button-ghost"
-              href="https://wa.me/51999999999"
+              href="https://wa.me/51985928062"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -328,6 +336,22 @@ export default function TalkPanel() {
                 value={form.pain}
                 onChange={update}
                 disabled={loading}
+              />
+            </label>
+
+            {/* Honeypot: campo invisible que un humano no rellena y un bot sí.
+                La Edge Function lo descarta en silencio. No usar display:none
+                solo, porque algunos bots lo saltan; se oculta con position
+                absolute fuera de la pantalla. */}
+            <label className="ix-hp" aria-hidden="true">
+              <span>NoFill</span>
+              <input
+                type="text"
+                name="website"
+                value={form.website}
+                onChange={update}
+                tabIndex={-1}
+                autoComplete="off"
               />
             </label>
 

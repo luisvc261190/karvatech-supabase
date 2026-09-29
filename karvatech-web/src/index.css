@@ -2059,6 +2059,18 @@ img {
   gap: 16px;
 }
 
+/* Honeypot del formulario: se sale de la pantalla en vez de display:none,
+   porque los bots que rastrean el DOM suelen saltarse los nodos ocultos. */
+.ix-hp {
+  position: absolute !important;
+  left: -9999px !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .ix-form-status {
   display: flex;
   align-items: center;
