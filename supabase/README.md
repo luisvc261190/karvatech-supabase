@@ -90,7 +90,7 @@ prefieres que el script escriba y verifique solo:
 
 ```powershell
 $env:NEON_DATABASE_URL = "postgresql://<la que estaba en backend/.env>"
-$env:SUPABASE_DB_URL   = "postgresql://postgres:<CLAVE>@db.ekbomwtifqdkbnzltbvk.supabase.co:5432/postgres"
+$env:SUPABASE_DB_URL   = "postgresql://postgres:<CLAVE>@db.zjbdqrolffzufjtnewtd.supabase.co:5432/postgres"
 python supabase/scripts/migrate.py
 ```
 
@@ -138,7 +138,7 @@ tu correo", que es lo que ya hacía el backend anterior.
 `karvatech-web/.env` (ya ignorado por git):
 
 ```
-VITE_SUPABASE_URL=https://ekbomwtifqdkbnzltbvk.supabase.co
+VITE_SUPABASE_URL=https://zjbdqrolffzufjtnewtd.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 ```
 

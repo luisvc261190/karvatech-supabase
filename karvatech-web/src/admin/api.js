@@ -15,6 +15,12 @@ const PAGE_SIZE = 50
 const MAX_UPLOAD_BYTES = 4 * 1024 * 1024
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 
+// Cloudinary es opcional: si están definidos el cloud name y un upload preset
+// sin firma, las subidas van allí; si no, se usa el bucket de Supabase Storage.
+const CLOUDINARY_CLOUD = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
+const CLOUDINARY_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
+const CLOUDINARY_ENABLED = Boolean(CLOUDINARY_CLOUD && CLOUDINARY_PRESET)
+
 // ---------------------------------------------------------------------------
 // Mapeo Postgres <-> componentes
 // ---------------------------------------------------------------------------
@@ -420,6 +426,10 @@ export async function uploadImage(file) {
     throw new Error('El archivo supera el límite de 4 MB')
   }
 
+  if (CLOUDINARY_ENABLED) {
+    return uploadToCloudinary(file)
+  }
+
   const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '')
   const stamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 15)
   const rand = Math.random().toString(16).slice(2, 8)
@@ -433,4 +443,28 @@ export async function uploadImage(file) {
 
   const { data } = sb.storage.from(IMAGES_BUCKET).getPublicUrl(path)
   return data.publicUrl
+}
+
+// Subida sin firma a Cloudinary. Necesita un upload preset marcado como
+// "Unsigned" en Settings → Upload; sin él Cloudinary responde 400.
+async function uploadToCloudinary(file) {
+  const body = new FormData()
+  body.append('file', file)
+  body.append('upload_preset', CLOUDINARY_PRESET)
+
+  let res
+  try {
+    res = await fetch(
+      `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`,
+      { method: 'POST', body },
+    )
+  } catch {
+    throw new Error('No se pudo conectar con Cloudinary')
+  }
+
+  const data = await res.json().catch(() => null)
+  if (!res.ok || !data?.secure_url) {
+    throw new Error(data?.error?.message || 'No se pudo subir la imagen a Cloudinary')
+  }
+  return data.secure_url
 }

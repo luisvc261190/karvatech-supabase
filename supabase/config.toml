@@ -5,7 +5,7 @@
 # el formulario público no tiene token. Es exactamente lo que queremos para
 # send-reply (que sí exige sesión) y lo contrario para submit-contact.
 
-project_id = "ekbomwtifqdkbnzltbvk"
+project_id = "zjbdqrolffzufjtnewtd"
 
 [functions.submit-contact]
 # El formulario "Hablemos" es público: no hay sesión que enviar.
